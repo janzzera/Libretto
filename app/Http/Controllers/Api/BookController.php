@@ -7,34 +7,42 @@ use Illuminate\Http\Request;
 use App\Models\Book;
 use App\Models\Author;
 use App\Models\Genre;
+use Illuminate\Support\Facades\Validator;
 
 class BookController extends Controller
 {
     public function index() {
-        $books = Book::with('author', 'genres')->latest()->paginate(5);
+        $books = Book::latest()->paginate(5);
 
         return response()->json([
-            'status' => "Success",
+            'success' => true,
             'data' => $books
         ]);
     }
 
     public function show(Book $book) {
-        $book->load('author', 'genres');
-
         return response()->json([
-            'status' => "Success",
+            'success' => true,
             'data' => $book
         ]);
     }
 
     public function store(Request $request) {
-        $data = $request->validate([
+        $validator = Validator::make($request->only('title', 'author', 'genres'), [
             'title' => 'required|unique:books,title',
             'author' => 'required|exists:authors,id',
             'genres' => 'required|array',
             'genres.*' => 'exists:genres,id'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = $validator->validated();
 
         $book = Book::create([
             'title' => $data['title'],
@@ -44,19 +52,27 @@ class BookController extends Controller
         $book->genres()->attach($data['genres']);
 
         return response()->json([
-            'status' => "Success",
+            'success' => true,
             'message' => 'Book created successfully.'
         ], 201);
     }
 
     public function update(Request $request, Book $book) {
-        $data = $request->validate([
+        $validator = Validator::make($request->only('title', 'author', 'genres'), [
             'title' => 'required|unique:books,title,' . $book->id,
             'author' => 'required|exists:authors,id',
             'genres' => 'required|array',
             'genres.*' => 'exists:genres,id'
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = $validator->validated();
         $book->update([
             'title' => $data['title'],
             'author_id' => $data['author']
@@ -65,7 +81,7 @@ class BookController extends Controller
         $book->genres()->sync($data['genres']);
 
         return response()->json([
-            'status' => "Success",
+            'success' => true,
             'message' => 'Book updated successfully.',
         ]);
     }
@@ -74,7 +90,7 @@ class BookController extends Controller
         $book->delete();
 
         return response()->json([
-            'status' => "Success",
+            'success' => true,
             'message' => 'Book deleted successfully.'
         ]);
     }
