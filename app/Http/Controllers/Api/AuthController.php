@@ -4,20 +4,31 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 
 class AuthController extends Controller
 {
     public function register(Request $request) {
-        $data = $request->validate([
-            'name' => 'required|string|unique:users,name',
-            'password' => 'required|string|confirmed|min:6'
+        
+        $validator = Validator::make($request->only('name', 'password'), [
+            'name' => 'required|unique:users,name',
+            'password' => 'required|min:7'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = $validator->validated();
 
         $user = User::create([
             'name' => $data['name'],
-            'password' => Hash::make($data['password'])
+            'password' => bcrypt($data['password'])
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -25,50 +36,63 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'User registered successfully.',
-            'token' => $token,
-            'user' => $user
+            'token' => $token
         ], 201);
     }
 
     public function login(Request $request) {
-        $data = $request->validate([
-            'name' => 'required|string',
-            'password' => 'required|string'
+
+        $validator = Validator::make($request->only('name', 'password'), [
+            'name' => 'required',
+            'password' => 'required'
         ]);
-
-        $user = User::where('name', $data['name'])->first();
-
-        if (!$user || !Hash::check($data['password'], $user->password)) {
+    
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+    
+        $credentials = $validator->validated();
+    
+        if (!Auth::attempt($credentials)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials.'
             ], 401);
         }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
+    
+        $user = Auth::user();
+    
+        // Token Expiration from config
+        $expiryMinutes = config('sanctum.token_expiration', 1440); // Default 1 day
+    
+        // Find existing token
+        $existingToken = $user->tokens()->where('name', 'auth_token')->first();
+    
+        $token = null;
+    
+        if ($existingToken) {
+            // Check expiry based on created_at + config minutes
+            if ($existingToken->created_at->addMinutes($expiryMinutes)->isPast()) {
+                // Expired - delete and regenerate
+                $existingToken->delete();
+                $token = $user->createToken('auth_token')->plainTextToken;
+            } else {
+                // Still valid - reuse the existing token value
+                // Note: Token string only shown once, so store token on client securely when first generated
+                $token = $existingToken->plainTextToken ?? null;
+            }
+        } else {
+            // No token exists - generate one
+            $token = $user->createToken('auth_token')->plainTextToken;
+        }
+    
         return response()->json([
             'success' => true,
             'message' => 'Logged in successfully.',
-            'token' => $token,
-            'user' => $user
-        ]);
-    }
-
-    public function logout(Request $request) {
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Logged out successfully.'
-        ]);
-    }
-
-    public function me(Request $request) {
-        return response()->json([
-            'success' => true,
-            'user' => $request->user()
+            'token' => $token
         ]);
     }
 }
-
