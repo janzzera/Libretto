@@ -8,10 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 
-class AuthController extends Controller
+class UserController extends Controller
 {
-    public function register(Request $request) {
-        
+    public function register(Request $request) { 
         $validator = Validator::make($request->only('name', 'password'), [
             'name' => 'required|unique:users,name',
             'password' => 'required|min:7'
@@ -31,17 +30,13 @@ class AuthController extends Controller
             'password' => bcrypt($data['password'])
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-
         return response()->json([
             'success' => true,
-            'message' => 'User registered successfully.',
-            'token' => $token
+            'message' => 'User registered successfully.'
         ], 201);
     }
 
     public function login(Request $request) {
-
         $validator = Validator::make($request->only('name', 'password'), [
             'name' => 'required',
             'password' => 'required'
@@ -56,7 +51,7 @@ class AuthController extends Controller
     
         $credentials = $validator->validated();
     
-        if (!Auth::attempt($credentials)) {
+        if (!Auth::attempt(["name" => $credentials["name"], "password" => $credentials["password"]])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials.'
@@ -64,26 +59,31 @@ class AuthController extends Controller
         }
     
         $user = Auth::user();
+<<<<<<< HEAD:app/Http/Controllers/Api/AuthController.php
 
         // Find existing token
+=======
+    
+>>>>>>> 3848a16b72f97e39983d7f6965eefe37bce517a8:app/Http/Controllers/Api/UserController.php
         $existingToken = $user->tokens()->where('name', 'auth_token')->first();
     
         $token = null;
     
         if ($existingToken) {
-            // Check expiry based on created_at + config minutes
-            if ($existingToken->created_at->addMinutes($expiryMinutes)->isPast()) {
-                // Expired - delete and regenerate
+            if ($existingToken->expires_at && now()->greaterThan($existingToken->expires_at)) {
                 $existingToken->delete();
-                $token = $user->createToken('auth_token')->plainTextToken;
+                $token = $user->createToken('auth_token', ['*'], now()->addDay())->plainTextToken;
             } else {
+<<<<<<< HEAD:app/Http/Controllers/Api/AuthController.php
                 // Still valid - reuse the existing token value
                 // Note: Token string only shown once, so store token on client securely when first generated
                 $token = $existingToken['token'];
+=======
+                $token = "Token expires at $existingToken->expires_at";
+>>>>>>> 3848a16b72f97e39983d7f6965eefe37bce517a8:app/Http/Controllers/Api/UserController.php
             }
         } else {
-            // No token exists - generate one
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $token = $user->createToken('auth_token', ['*'], now()->addDay())->plainTextToken;
         }
     
         return response()->json([
