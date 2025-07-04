@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\BookController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\AuthorController;
+use App\Http\Controllers\Api\GenreController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -16,6 +18,8 @@ Route::post('login', [UserController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('books', BookController::class);
+    Route::apiResource('authors', AuthorController::class);
+    Route::apiResource('genres', GenreController::class);
 
     Route::prefix('books/{book}')->group(function() {
         Route::get('/reviews', [ReviewController::class, 'index']);

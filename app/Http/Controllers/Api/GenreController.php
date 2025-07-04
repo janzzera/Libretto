@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Genre;
+use Illuminate\Support\Facades\Validator;
 
 class GenreController extends Controller
 {
@@ -12,44 +13,62 @@ class GenreController extends Controller
         $genres = Genre::latest()->paginate(5);
 
         return response()->json([
-            'status' => 'Success',
+            'success' => true,
             'data' => $genres
         ]);
     }
 
     public function show(Genre $genre) {
         return response()->json([
-            'status' => 'Success',
+            'success' => true,
             'data' => $genre
         ]);
     }
 
     public function store(Request $request) {
-        $data = $request->validate([
-            'genre' => 'required|unique:genres,name'
+        $validator = Validator::make($request->only('name'), [
+            'name' => 'required|unique:genres,name'
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
         $genre = Genre::create([
-            'name' => $data['genre']
+            'name' => $data['name']
         ]);
 
         return response()->json([
-            'status' => 'Success',
-            'message' => 'Genre created successfully.',
+            'success' => true,
+            'message' => 'Genre created successfully.'
         ], 201);
     }
 
     public function update(Request $request, Genre $genre) {
-        $data = $request->validate([
-            'genre' => 'required|unique:genres,name,' . $genre->id
+        $validator = Validator::make($request->only('name'), [
+            'name' => 'required|unique:genres,name'
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
         $genre->update([
-            'name' => $data['genre']
+            'name' => $data['name']
         ]);
 
         return response()->json([
-            'status' => 'Success',
+            'success' => true,
             'message' => 'Genre updated successfully.',
         ]);
     }
@@ -58,7 +77,7 @@ class GenreController extends Controller
         $genre->delete();
 
         return response()->json([
-            'status' => 'Success',
+            'success' => true,
             'message' => 'Genre deleted successfully.'
         ]);
     }

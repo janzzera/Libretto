@@ -59,12 +59,7 @@ class UserController extends Controller
         }
     
         $user = Auth::user();
-<<<<<<< HEAD:app/Http/Controllers/Api/AuthController.php
-
-        // Find existing token
-=======
     
->>>>>>> 3848a16b72f97e39983d7f6965eefe37bce517a8:app/Http/Controllers/Api/UserController.php
         $existingToken = $user->tokens()->where('name', 'auth_token')->first();
     
         $token = null;
@@ -74,13 +69,7 @@ class UserController extends Controller
                 $existingToken->delete();
                 $token = $user->createToken('auth_token', ['*'], now()->addDay())->plainTextToken;
             } else {
-<<<<<<< HEAD:app/Http/Controllers/Api/AuthController.php
-                // Still valid - reuse the existing token value
-                // Note: Token string only shown once, so store token on client securely when first generated
-                $token = $existingToken['token'];
-=======
                 $token = "Token expires at $existingToken->expires_at";
->>>>>>> 3848a16b72f97e39983d7f6965eefe37bce517a8:app/Http/Controllers/Api/UserController.php
             }
         } else {
             $token = $user->createToken('auth_token', ['*'], now()->addDay())->plainTextToken;
