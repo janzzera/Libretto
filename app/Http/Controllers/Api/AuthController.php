@@ -64,10 +64,7 @@ class AuthController extends Controller
         }
     
         $user = Auth::user();
-    
-        // Token Expiration from config
-        $expiryMinutes = config('sanctum.token_expiration', 1440); // Default 1 day
-    
+
         // Find existing token
         $existingToken = $user->tokens()->where('name', 'auth_token')->first();
     
@@ -82,7 +79,7 @@ class AuthController extends Controller
             } else {
                 // Still valid - reuse the existing token value
                 // Note: Token string only shown once, so store token on client securely when first generated
-                $token = $existingToken->plainTextToken ?? null;
+                $token = $existingToken['token'];
             }
         } else {
             // No token exists - generate one
