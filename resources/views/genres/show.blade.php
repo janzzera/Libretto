@@ -27,18 +27,14 @@
                 </div>
                 <div class="row">
                     <label for="books" class="col-md-4 col-form-label text-md-end text-start"><strong>Books:</strong></label>
-                </div>
-                @forelse ($genre->books as $book)
-                <div class="row">
-                    <div class="col-md-4 col-form-label text-md-end text-start">{{ $loop->iteration }}. </div>
                     <div class="col-md-7" style="line-height: 35px;">
-                        {{ $book->title }}
-                    </div>                
-                    @empty
-                    <div class="col-md-6 col-form-label text-md-end text-start">No Book Found </div>
+                        @forelse ($genre->books as $book)
+                            {{ $loop->iteration }}. {{ $book->title }} <br>
+                            @empty No book available<br>
+                        @endforelse
+                    </div>
                 </div>
-                
-                @endforelse
+
             </div>
         </div>
     </div> 

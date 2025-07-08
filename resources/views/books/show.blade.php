@@ -39,6 +39,16 @@
                         @endforeach
                     </div>
                 </div>
+                <div class="row">
+                    <label for="reviews" class="col-md-4 col-form-label text-md-end text-start"><strong>Reviews:</strong></label>
+                    <div class="col-md-6" style="line-height: 35px;">
+                        @forelse ($book->reviews as $review)
+                            {{ $loop->iteration }}. {{ $review->content }} <br>
+                            @empty No review available<br>
+                        @endforelse
+
+                    </div>
+                </div>
 
             </div>
         </div>
