@@ -8,9 +8,9 @@ use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\AuthorController;
 use App\Http\Controllers\Api\GenreController;
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
 
 Route::post('register', [UserController::class, 'register']);
 Route::post('login', [UserController::class, 'login']);
